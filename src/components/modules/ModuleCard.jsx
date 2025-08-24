@@ -1,20 +1,62 @@
 import { useState } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
 
 import ModuleItem from './ModuleItem';
 
 const ModuleCard = ({
   module,
+  resources = [],
   onEdit,
   onDelete,
-  items = [],
   onAddItem,
   onDeleteItem,
+  onEditResource,
+  onReorder,
+  onMove,
+  dragIndex,
+  onModuleReorder,
+  isHighlighted,
 }) => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
-  const moduleItems = items.filter(item => item.moduleId === module.id);
+  // Drag and drop for modules
+  const [{ isDragging: isModuleDragging }, moduleDragRef] = useDrag({
+    type: 'MODULE',
+    item: { index: dragIndex, id: module.id },
+    collect: monitor => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, moduleDropRef] = useDrop({
+    accept: 'MODULE',
+    hover: (item, monitor) => {
+      if (!monitor.isOver({ shallow: true })) return;
+      if (item.index === dragIndex) return;
+
+      onModuleReorder(item.index, dragIndex);
+      item.index = dragIndex;
+    },
+  });
+
+  // Drop zone for resources being moved from other modules
+  const [, resourceDropRef] = useDrop({
+    accept: 'RESOURCE',
+    hover: (draggedItem, monitor) => {
+      if (!monitor.isOver({ shallow: true })) return;
+      if (draggedItem.moduleId === module.id) return; // Same module, handled by ModuleItem
+
+      // Resource is being moved from another module to this one
+      onMove(draggedItem.id, draggedItem.moduleId, module.id);
+      draggedItem.moduleId = module.id;
+    },
+    collect: monitor => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  });
 
   const toggleOptions = e => {
     e.stopPropagation();
@@ -46,8 +88,18 @@ const ModuleCard = ({
   };
 
   return (
-    <div className="module-card-container">
-      <div className="module-card" onClick={toggleExpanded}>
+    <div
+      className={`module-card-container ${isHighlighted ? 'highlighted' : ''}`}
+      data-module-id={module.id}
+    >
+      <div
+        className={`module-card ${isModuleDragging ? 'dragging' : ''}`}
+        onClick={toggleExpanded}
+        ref={node => {
+          moduleDragRef(node);
+          moduleDropRef(node);
+        }}
+      >
         <div className="module-content">
           <div className="module-icon">
             <span className={`icon ${isExpanded ? 'expanded' : ''}`}>▼</span>
@@ -55,9 +107,9 @@ const ModuleCard = ({
           <div className="module-info">
             <h3 className="module-title">{module.name}</h3>
             <p className="module-subtitle">
-              {moduleItems.length === 0
+              {resources.length === 0
                 ? 'Add items to this module'
-                : `${moduleItems.length} item${moduleItems.length !== 1 ? 's' : ''}`}
+                : `${resources.length} item${resources.length !== 1 ? 's' : ''}`}
             </p>
           </div>
         </div>
@@ -79,9 +131,13 @@ const ModuleCard = ({
           )}
         </div>
       </div>
+
       {isExpanded && (
-        <div className="module-content-expanded">
-          {moduleItems.length === 0 ? (
+        <div
+          className="module-content-expanded"
+          ref={resourceDropRef} // This makes the entire expanded area a drop zone
+        >
+          {resources.length === 0 ? (
             <div className="empty-module-content">
               <p className="empty-module-message">
                 No content added to this module yet.
@@ -113,11 +169,16 @@ const ModuleCard = ({
           ) : (
             <div className="module-items">
               <div className="module-items-list">
-                {moduleItems.map(item => (
+                {resources.map((resource, index) => (
                   <ModuleItem
-                    key={item.id}
-                    item={item}
+                    key={resource.id}
+                    item={resource}
                     onDelete={onDeleteItem}
+                    onEdit={() => onEditResource(resource)}
+                    onReorder={onReorder}
+                    onMove={onMove}
+                    moduleId={module.id}
+                    dragIndex={index}
                   />
                 ))}
               </div>
