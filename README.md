@@ -2,6 +2,12 @@
 
 A React app I built for creating and organizing online courses. It lets you build course structures with modules, add resources like links and files, and organize everything with drag & drop.
 
+## 🚀 Live Demo
+
+**Try it out:** [https://toddle-test-s6qzby6m0-ashirvaddubeys-projects.vercel.app](https://toddle-test-s6qzby6m0-ashirvaddubeys-projects.vercel.app)
+
+---
+
 ## What it does
 
 ### Modules
