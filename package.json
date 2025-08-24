@@ -11,15 +11,15 @@
     "format": "prettier --write \"src/**/*.{js,jsx}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx}\"",
     "preview": "vite preview",
-    "clean": "if exist dist rmdir /s /q dist",
+    "clean": "rimraf dist",
     "prebuild": "npm run clean",
     "test": "echo \"No tests configured yet\""
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0",
     "react-dnd": "^16.0.1",
-    "react-dnd-html5-backend": "^16.0.1"
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
@@ -36,6 +36,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.0.0",
     "prettier": "^3.5.3",
+    "rimraf": "^5.0.10",
     "vite": "^6.3.5"
   }
 }
